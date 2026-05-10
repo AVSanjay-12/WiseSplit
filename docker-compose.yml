@@ -8,4 +8,5 @@ services:
       POSTGRES_USER: splitwise_user
       POSTGRES_PASSWORD: splitwise_pass
     ports:
-      - "5432:5432"
+      - "54
+      32:5432"
