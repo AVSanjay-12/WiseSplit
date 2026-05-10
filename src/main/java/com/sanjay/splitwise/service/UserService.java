@@ -1,6 +1,7 @@
 package com.sanjay.splitwise.service;
 
 import com.sanjay.splitwise.entity.User;
+import com.sanjay.splitwise.exception.UserNotFoundException;
 import com.sanjay.splitwise.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,12 @@ public class UserService {
                 .build();
 
         return userRepository.save(user);
+    }
+
+    public User getUserById(Long id){
+        return userRepository.findById(id)
+                .orElseThrow(()->
+                        new UserNotFoundException("User not found with id: " + id));
     }
 
     public List<User> getAllUsers() {
