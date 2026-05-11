@@ -54,10 +54,6 @@ public class GroupService {
                 .joinedAt(LocalDateTime.now())
                 .build();
 
-        groupMember.setUser(user);
-        groupMember.setGroup(group);
-        groupMember.setJoinedAt(LocalDateTime.now());
-
         return groupMemberRepository.save(groupMember);
     }
 }

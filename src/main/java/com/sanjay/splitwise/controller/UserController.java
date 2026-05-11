@@ -1,7 +1,11 @@
 package com.sanjay.splitwise.controller;
 
+import com.sanjay.splitwise.dto.UserRequestDTO;
+import com.sanjay.splitwise.dto.UserResponseDTO;
 import com.sanjay.splitwise.entity.User;
+import com.sanjay.splitwise.mapper.UserMapper;
 import com.sanjay.splitwise.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,19 +23,25 @@ public class UserController {
 
     // POST /users?name=...&email=...
     @PostMapping
-    public User createUser(@RequestParam String name,
-                           @RequestParam String email) {
+    public UserResponseDTO createUser(@Valid @RequestBody UserRequestDTO request) {
 
-        return userService.createUser(name, email);
+        User user = userService.createUser(request.getName(), request.getEmail());
+
+        return UserMapper.toDTO(user);
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id){
-        return userService.getUserById(id);
+    public UserResponseDTO getUserById(@PathVariable Long id){
+        User user = userService.getUserById(id);
+
+        return UserMapper.toDTO(user);
     }
 
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public List<UserResponseDTO> getAllUsers() {
+        return userService.getAllUsers()
+                .stream()
+                .map(UserMapper::toDTO)
+                .toList();
     }
 }
