@@ -1,8 +1,11 @@
 package com.sanjay.splitwise.controller;
 
 import com.sanjay.splitwise.dto.ExpenseRequestDTO;
+import com.sanjay.splitwise.dto.ExpenseResponseDTO;
 import com.sanjay.splitwise.entity.Expense;
+import com.sanjay.splitwise.mapper.ExpenseMapper;
 import com.sanjay.splitwise.service.ExpenseService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -19,8 +22,10 @@ public class ExpenseController {
     }
 
     @PostMapping
-    public Expense addExpense(@RequestBody ExpenseRequestDTO request) {
-        return expenseService.addExpense(request);
+    public ExpenseResponseDTO addExpense(@Valid @RequestBody ExpenseRequestDTO request) {
+        Expense expense =  expenseService.addExpense(request);
+
+        return ExpenseMapper.toDTO(expense);
     }
 
     @GetMapping("/groups/{groupId}/balances")
