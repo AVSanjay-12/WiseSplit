@@ -7,6 +7,7 @@ import com.sanjay.splitwise.entity.GroupMember;
 import com.sanjay.splitwise.mapper.GroupMapper;
 import com.sanjay.splitwise.mapper.GroupMemberMapper;
 import com.sanjay.splitwise.service.GroupService;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,7 @@ public class GroupController {
     // Create group
     // POST /groups?name=Trip
     @PostMapping
+    @Operation(summary = "Create a group")
     public GroupResponseDTO createGroup(@RequestParam String name) {
         Group group = groupService.createGroup(name);
         return GroupMapper.toDTO(group);
@@ -30,6 +32,7 @@ public class GroupController {
     // Add user to group
     // POST /groups/{groupId}/users/{userId}
     @PostMapping("/{groupId}/users/{userId}")
+    @Operation(summary = "Add User to the Group")
     public GroupMemberResponseDTO addUserToGroup(@PathVariable Long groupId,
                                                  @PathVariable Long userId) {
 
