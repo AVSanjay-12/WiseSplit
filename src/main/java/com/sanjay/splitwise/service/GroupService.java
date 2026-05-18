@@ -33,7 +33,6 @@ public class GroupService {
 
         Group group = Group.builder()
                 .name(name)
-                .createdAt(LocalDateTime.now())
                 .build();
 
         return groupRepository.save(group);
