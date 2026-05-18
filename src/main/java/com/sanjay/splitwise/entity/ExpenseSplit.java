@@ -1,5 +1,6 @@
 package com.sanjay.splitwise.entity;
 
+import com.sanjay.splitwise.entity.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,11 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ExpenseSplit {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class ExpenseSplit extends BaseEntity {
 
     // Which expense
     @ManyToOne

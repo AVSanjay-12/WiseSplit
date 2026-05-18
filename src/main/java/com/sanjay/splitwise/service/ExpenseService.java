@@ -59,7 +59,6 @@ public class ExpenseService {
                 .paidBy(paidBy)
                 .group(group)
                 .description(request.getDescription())
-                .createdAt(LocalDateTime.now())
                 .build();
 
         Expense savedExpense = expenseRepository.save(expense);

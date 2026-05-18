@@ -21,7 +21,6 @@ public class UserService {
         User user = User.builder()
                 .name(name)
                 .email(email)
-                .createdAt(LocalDateTime.now())
                 .build();
 
         return userRepository.save(user);

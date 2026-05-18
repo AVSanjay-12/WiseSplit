@@ -1,5 +1,6 @@
 package com.sanjay.splitwise.entity;
 
+import com.sanjay.splitwise.entity.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,13 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Group {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Group extends BaseEntity {
 
     private String name;
-
-    private LocalDateTime createdAt;
 }

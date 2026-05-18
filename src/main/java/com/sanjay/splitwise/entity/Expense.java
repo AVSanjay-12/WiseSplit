@@ -1,5 +1,6 @@
 package com.sanjay.splitwise.entity;
 
+import com.sanjay.splitwise.entity.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,11 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Expense {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Expense extends BaseEntity {
 
     // Total amount
     @Column(nullable = false)
@@ -34,6 +31,4 @@ public class Expense {
     private Group group;
 
     private String description;
-
-    private LocalDateTime createdAt;
 }
