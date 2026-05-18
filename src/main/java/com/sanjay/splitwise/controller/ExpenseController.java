@@ -5,6 +5,7 @@ import com.sanjay.splitwise.dto.ExpenseResponseDTO;
 import com.sanjay.splitwise.entity.Expense;
 import com.sanjay.splitwise.mapper.ExpenseMapper;
 import com.sanjay.splitwise.service.ExpenseService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,7 @@ public class ExpenseController {
     }
 
     @PostMapping
+    @Operation(summary = "Create a new expense")
     public ExpenseResponseDTO addExpense(@Valid @RequestBody ExpenseRequestDTO request) {
         Expense expense =  expenseService.addExpense(request);
 
@@ -29,6 +31,7 @@ public class ExpenseController {
     }
 
     @GetMapping("/groups/{groupId}/balances")
+    @Operation(summary = "Get balances of the group")
     public Map<Long, BigDecimal> calculateBalances(
             @PathVariable Long groupId
     ){
