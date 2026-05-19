@@ -12,4 +12,5 @@ public class SplitDTO {
 
     private Long userId;
     private BigDecimal shareAmount;
+    private BigDecimal percentage;
 }

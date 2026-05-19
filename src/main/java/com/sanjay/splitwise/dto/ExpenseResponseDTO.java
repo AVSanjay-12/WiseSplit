@@ -1,5 +1,6 @@
 package com.sanjay.splitwise.dto;
 
+import com.sanjay.splitwise.enums.SplitType;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -21,6 +22,8 @@ public class ExpenseResponseDTO {
 
     private Long groupId;
     private String groupName;
+
+    private SplitType splitType;
 
     private String description;
 

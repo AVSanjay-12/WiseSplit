@@ -1,5 +1,6 @@
 package com.sanjay.splitwise.dto;
 
+import com.sanjay.splitwise.enums.SplitType;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +24,9 @@ public class ExpenseRequestDTO {
 
     @NotNull(message = "Group is required")
     private Long groupId;
+
+    @NotNull(message = "Split type not specified")
+    private SplitType splitType;
 
     @NotBlank(message = "Description cannot be ")
     private String description;

@@ -1,6 +1,7 @@
 package com.sanjay.splitwise.entity;
 
 import com.sanjay.splitwise.entity.base.BaseEntity;
+import com.sanjay.splitwise.enums.SplitType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,6 +30,9 @@ public class Expense extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "group_id", nullable = false)
     private Group group;
+
+    @Enumerated(EnumType.STRING)
+    private SplitType splitType;
 
     private String description;
 }

@@ -6,6 +6,7 @@ import com.sanjay.splitwise.entity.Expense;
 import com.sanjay.splitwise.entity.ExpenseSplit;
 import com.sanjay.splitwise.entity.Group;
 import com.sanjay.splitwise.entity.User;
+import com.sanjay.splitwise.enums.SplitType;
 import com.sanjay.splitwise.repository.ExpenseRepository;
 import com.sanjay.splitwise.repository.ExpenseSplitRepository;
 import com.sanjay.splitwise.repository.GroupRepository;
@@ -14,6 +15,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +45,14 @@ public class ExpenseService {
         Group group = groupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new RuntimeException("Group not found"));
 
+        if (request.getSplitType() == SplitType.EQUAL) {
+            processEqualSplits(request);
+        }
+
+        else if (request.getSplitType() == SplitType.PERCENTAGE) {
+            processPercentageSplits(request);
+        }
+
 //        Validate splits sum
         BigDecimal total = BigDecimal.ZERO;
 
@@ -58,6 +68,7 @@ public class ExpenseService {
                 .amount(request.getAmount())
                 .paidBy(paidBy)
                 .group(group)
+                .splitType(request.getSplitType())
                 .description(request.getDescription())
                 .build();
 
@@ -105,5 +116,76 @@ public class ExpenseService {
             }
         }
         return balances;
+    }
+
+    private void processEqualSplits(ExpenseRequestDTO request){
+
+        int totalUsers = request.getSplits().size();
+
+        BigDecimal totalAmount = request.getAmount();
+
+        BigDecimal equalShare = totalAmount.divide(
+                BigDecimal.valueOf(totalUsers),
+                2,
+                RoundingMode.HALF_UP
+        );
+
+        BigDecimal distributedAmount = BigDecimal.ZERO;
+
+        for(int i=0; i<totalUsers; i++){
+            if(i == totalUsers-1){
+
+                BigDecimal remainingAmount = totalAmount.subtract(distributedAmount);
+
+                request.getSplits().get(i).setShareAmount(remainingAmount);
+            }
+            else{
+                request.getSplits().get(i).setShareAmount(equalShare);
+
+                distributedAmount = distributedAmount.add(equalShare);
+            }
+        }
+    }
+
+    private void processPercentageSplits(ExpenseRequestDTO request){
+
+        BigDecimal totalPercentage = BigDecimal.ZERO;
+
+        for(SplitDTO split: request.getSplits()){
+            if(split.getPercentage() == null){
+                throw new RuntimeException("Percentage is required for PERCENTAGE split");
+            }
+            totalPercentage =  totalPercentage.add(split.getPercentage());
+        }
+
+        if(totalPercentage.compareTo(BigDecimal.valueOf(100.00)) != 0){
+            throw new RuntimeException("Total percentage must equal 100");
+        }
+
+        BigDecimal totalAmount = request.getAmount();
+
+        BigDecimal distributedAmount = BigDecimal.ZERO;
+
+        int totalUsers = request.getSplits().size();
+
+        for(int i=0; i<totalUsers; i++){
+
+            SplitDTO split = request.getSplits().get(i);
+
+            if(i == totalUsers - 1) {
+                BigDecimal remainingAmount = totalAmount.subtract(distributedAmount);
+
+                split.setShareAmount(remainingAmount);
+            }
+            else{
+                BigDecimal shareAmount = totalAmount
+                        .multiply(split.getPercentage())
+                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+                split.setShareAmount(shareAmount);
+
+                distributedAmount = distributedAmount.add(shareAmount);
+            }
+        }
     }
 }

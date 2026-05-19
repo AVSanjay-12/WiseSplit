@@ -16,7 +16,7 @@ public class ExpenseMapper {
 
                 .groupId(expense.getGroup().getId())
                 .groupName(expense.getGroup().getName())
-
+                .splitType(expense.getSplitType())
                 .description(expense.getDescription())
                 .createdAt(expense.getCreatedAt())
                 .build();
