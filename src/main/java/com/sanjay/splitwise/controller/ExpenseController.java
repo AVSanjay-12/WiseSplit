@@ -9,6 +9,7 @@ import com.sanjay.splitwise.mapper.ExpenseMapper;
 import com.sanjay.splitwise.service.ExpenseService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -52,5 +53,29 @@ public class ExpenseController {
         Expense expense = expenseService.settleUp(request);
 
         return ExpenseMapper.toDTO(expense);
+    }
+
+    @GetMapping("/groups/{groupId}")
+    public Page<ExpenseResponseDTO> getGroupExpenses(
+            @PathVariable Long groupId,
+            @RequestParam(defaultValue = "0")
+            int page,
+            @RequestParam(defaultValue = "5")
+            int size
+    ) {
+
+        return expenseService.getGroupExpenses(groupId, page, size);
+    }
+
+    @GetMapping("/users/{userId}")
+    public Page<ExpenseResponseDTO> getUserExpenses(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0")
+            int page,
+            @RequestParam(defaultValue = "5")
+            int size
+    ) {
+
+        return expenseService.getUserExpenses(userId, page, size);
     }
 }

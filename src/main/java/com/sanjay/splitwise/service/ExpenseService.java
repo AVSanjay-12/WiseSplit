@@ -1,20 +1,19 @@
 package com.sanjay.splitwise.service;
 
-import com.sanjay.splitwise.dto.ExpenseRequestDTO;
-import com.sanjay.splitwise.dto.SettleUpRequestDTO;
-import com.sanjay.splitwise.dto.SettlementResponseDTO;
-import com.sanjay.splitwise.dto.SplitDTO;
+import com.sanjay.splitwise.dto.*;
 import com.sanjay.splitwise.entity.Expense;
 import com.sanjay.splitwise.entity.ExpenseSplit;
 import com.sanjay.splitwise.entity.Group;
 import com.sanjay.splitwise.entity.User;
 import com.sanjay.splitwise.enums.SplitType;
+import com.sanjay.splitwise.mapper.ExpenseMapper;
 import com.sanjay.splitwise.repository.ExpenseRepository;
 import com.sanjay.splitwise.repository.ExpenseSplitRepository;
 import com.sanjay.splitwise.repository.GroupRepository;
 import com.sanjay.splitwise.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -269,5 +268,23 @@ public class ExpenseService {
                         .build();
 
         return addExpense(expenseRequest);
+    }
+
+    public Page<ExpenseResponseDTO> getGroupExpenses(Long groupId, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        return expenseRepository
+                .findByGroupId(groupId, pageable)
+                .map(ExpenseMapper::toDTO);
+    }
+
+    public Page<ExpenseResponseDTO> getUserExpenses(Long userId, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        return expenseRepository
+                .findByPaidById(userId, pageable)
+                .map(ExpenseMapper::toDTO);
     }
 }
