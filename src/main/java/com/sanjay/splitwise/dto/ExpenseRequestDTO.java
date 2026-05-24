@@ -13,6 +13,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ExpenseRequestDTO {
 
     @NotNull(message = "Amount is required")

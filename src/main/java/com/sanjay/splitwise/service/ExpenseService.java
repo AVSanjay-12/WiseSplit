@@ -1,6 +1,8 @@
 package com.sanjay.splitwise.service;
 
 import com.sanjay.splitwise.dto.ExpenseRequestDTO;
+import com.sanjay.splitwise.dto.SettleUpRequestDTO;
+import com.sanjay.splitwise.dto.SettlementResponseDTO;
 import com.sanjay.splitwise.dto.SplitDTO;
 import com.sanjay.splitwise.entity.Expense;
 import com.sanjay.splitwise.entity.ExpenseSplit;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +93,7 @@ public class ExpenseService {
         return savedExpense;
     }
 
+//    Calculate Balance
     public Map<Long, BigDecimal> calculateBalances(Long groupId){
 //        userId -> balance
         Map<Long, BigDecimal> balances = new HashMap<>();
@@ -187,5 +191,83 @@ public class ExpenseService {
                 distributedAmount = distributedAmount.add(shareAmount);
             }
         }
+    }
+
+    public List<SettlementResponseDTO> calculateSettlements(Long groupId){
+        Map<Long, BigDecimal> balances = calculateBalances(groupId);
+
+        Map<Long, BigDecimal> creditors = new HashMap<>();
+        Map<Long, BigDecimal> debtors = new HashMap<>();
+
+        for(Map.Entry<Long, BigDecimal> entry : balances.entrySet()) {
+            if(entry.getValue().compareTo(BigDecimal.ZERO) > 0) {
+                creditors.put(entry.getKey(), entry.getValue());
+            } else if(entry.getValue().compareTo(BigDecimal.ZERO) < 0) {
+                debtors.put(entry.getKey(), entry.getValue().abs());
+            }
+        }
+
+        List<SettlementResponseDTO> settlements = new ArrayList<>();
+        for (Map.Entry<Long, BigDecimal> debtorEntry : debtors.entrySet()) {
+
+            Long debtorId = debtorEntry.getKey();
+
+            BigDecimal debtAmount = debtorEntry.getValue();
+
+            for (Map.Entry<Long, BigDecimal> creditorEntry : creditors.entrySet()) {
+
+                if (debtAmount.compareTo(BigDecimal.ZERO) == 0) {
+                    break;
+                }
+                Long creditorId = creditorEntry.getKey();
+                BigDecimal creditAmount = creditorEntry.getValue();
+
+                if (creditAmount.compareTo(BigDecimal.ZERO) == 0) {
+                    continue;
+                }
+                BigDecimal settledAmount = debtAmount.min(creditAmount);
+
+                // Settlement DTO
+                User debtor = userRepository.findById(debtorId)
+                                .orElseThrow();
+
+                User creditor = userRepository.findById(creditorId)
+                                .orElseThrow();
+
+                settlements.add(SettlementResponseDTO.builder()
+                                .fromUserId(debtorId)
+                                .fromUserName(debtor.getName())
+
+                                .toUserId(creditorId)
+                                .toUserName(creditor.getName())
+
+                                .amount(settledAmount)
+                                .build()
+                );
+
+                debtAmount = debtAmount.subtract(settledAmount);
+
+                creditorEntry.setValue(creditAmount.subtract(settledAmount));
+            }
+        }
+        return settlements;
+    }
+
+    public Expense settleUp(SettleUpRequestDTO request) {
+        SplitDTO splitDTO = SplitDTO.builder()
+                .userId(request.getReceiverUserId())
+                .shareAmount(request.getAmount())
+                .build();
+
+        ExpenseRequestDTO expenseRequest = ExpenseRequestDTO.builder()
+                        .amount(request.getAmount())
+                        .paidByUserId(request.getPayerUserId())
+                        .groupId(request.getGroupId())
+                        .description("Settlement Payment")
+                        .splitType(SplitType.EXACT)
+                        .splits(List.of(splitDTO))
+                        .build();
+
+        return addExpense(expenseRequest);
     }
 }
