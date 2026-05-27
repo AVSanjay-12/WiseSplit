@@ -4,6 +4,7 @@ import com.sanjay.splitwise.dto.LoginRequestDTO;
 import com.sanjay.splitwise.dto.LoginResponseDTO;
 import com.sanjay.splitwise.entity.User;
 import com.sanjay.splitwise.repository.UserRepository;
+import com.sanjay.splitwise.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +13,17 @@ public class AuthService {
 
     private final UserRepository userRepository;
 
+    private final JwtUtil jwtUtil;
+
     private final PasswordEncoder passwordEncoder;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     public LoginResponseDTO login(LoginRequestDTO request) {
@@ -36,7 +43,10 @@ public class AuthService {
             );
         }
 
+        String token = jwtUtil.generateToken(user.getEmail());
+
         return LoginResponseDTO.builder()
+                .token(token)
                 .message("Login successful")
                 .build();
     }
