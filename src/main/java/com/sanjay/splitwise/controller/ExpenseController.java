@@ -56,6 +56,7 @@ public class ExpenseController {
     }
 
     @GetMapping("/groups/{groupId}")
+    @Operation(summary = "Group expense history")
     public Page<ExpenseResponseDTO> getGroupExpenses(
             @PathVariable Long groupId,
             @RequestParam(defaultValue = "0")
@@ -68,6 +69,7 @@ public class ExpenseController {
     }
 
     @GetMapping("/users/{userId}")
+    @Operation(summary = "User expense history")
     public Page<ExpenseResponseDTO> getUserExpenses(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0")

@@ -27,7 +27,7 @@ public class UserController {
     @Operation(summary = "Create a new user")
     public UserResponseDTO createUser(@Valid @RequestBody UserRequestDTO request) {
 
-        User user = userService.createUser(request.getName(), request.getEmail());
+        User user = userService.createUser(request.getName(), request.getEmail(), request.getPassword());
 
         return UserMapper.toDTO(user);
     }

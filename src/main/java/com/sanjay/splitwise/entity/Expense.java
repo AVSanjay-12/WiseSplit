@@ -23,7 +23,7 @@ public class Expense extends BaseEntity {
 
     // Who paid
     @ManyToOne
-    @JoinColumn(name = "paid_by", nullable = false)
+    @JoinColumn(name = "paid_by_user_id", nullable = false)
     private User paidBy;
 
     // Which group
