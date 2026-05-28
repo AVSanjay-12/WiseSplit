@@ -38,11 +38,11 @@ public class ExpenseService {
     }
 
     @Transactional
-    public Expense addExpense(ExpenseRequestDTO request){
+    public Expense addExpense(ExpenseRequestDTO request, String email){
 
 //        Fetch Payer
-        User paidBy = userRepository.findById(request.getPaidByUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User paidByUser = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 //        Fetch group
         Group group = groupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new RuntimeException("Group not found"));
@@ -68,7 +68,7 @@ public class ExpenseService {
 //        Create Expense
         Expense expense = Expense.builder()
                 .amount(request.getAmount())
-                .paidBy(paidBy)
+                .paidBy(paidByUser)
                 .group(group)
                 .splitType(request.getSplitType())
                 .description(request.getDescription())
@@ -250,7 +250,7 @@ public class ExpenseService {
         return settlements;
     }
 
-    public Expense settleUp(SettleUpRequestDTO request) {
+    public Expense settleUp(SettleUpRequestDTO request, String email) {
         SplitDTO splitDTO = SplitDTO.builder()
                 .userId(request.getReceiverUserId())
                 .shareAmount(request.getAmount())
@@ -258,14 +258,13 @@ public class ExpenseService {
 
         ExpenseRequestDTO expenseRequest = ExpenseRequestDTO.builder()
                         .amount(request.getAmount())
-                        .paidByUserId(request.getPayerUserId())
                         .groupId(request.getGroupId())
                         .description("Settlement Payment")
                         .splitType(SplitType.EXACT)
                         .splits(List.of(splitDTO))
                         .build();
 
-        return addExpense(expenseRequest);
+        return addExpense(expenseRequest, email);
     }
 
     public Page<ExpenseResponseDTO> getGroupExpenses(Long groupId, int page, int size) {

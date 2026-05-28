@@ -20,9 +20,6 @@ public class ExpenseRequestDTO {
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private BigDecimal amount;
 
-    @NotNull(message = "Paid by user id is required")
-    private Long paidByUserId;
-
     @NotNull(message = "Group is required")
     private Long groupId;
 

@@ -10,6 +10,7 @@ import com.sanjay.splitwise.service.ExpenseService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -28,8 +29,10 @@ public class ExpenseController {
 
     @PostMapping
     @Operation(summary = "Create a new expense")
-    public ExpenseResponseDTO addExpense(@Valid @RequestBody ExpenseRequestDTO request) {
-        Expense expense =  expenseService.addExpense(request);
+    public ExpenseResponseDTO addExpense(@Valid @RequestBody ExpenseRequestDTO request,
+                                         Authentication authentication) {
+        String email = authentication.getName();
+        Expense expense =  expenseService.addExpense(request, email);
 
         return ExpenseMapper.toDTO(expense);
     }
@@ -48,9 +51,12 @@ public class ExpenseController {
     }
 
     @PostMapping("/settle")
-    public ExpenseResponseDTO settleUp(@RequestBody SettleUpRequestDTO request) {
+    public ExpenseResponseDTO settleUp(@RequestBody SettleUpRequestDTO request,
+                                       Authentication authentication) {
 
-        Expense expense = expenseService.settleUp(request);
+        String email = authentication.getName();
+
+        Expense expense = expenseService.settleUp(request, email);
 
         return ExpenseMapper.toDTO(expense);
     }
