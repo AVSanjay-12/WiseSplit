@@ -236,10 +236,8 @@ public class ExpenseService {
                 settlements.add(SettlementResponseDTO.builder()
                                 .fromUserId(debtorId)
                                 .fromUserName(debtor.getName())
-
                                 .toUserId(creditorId)
                                 .toUserName(creditor.getName())
-
                                 .amount(settledAmount)
                                 .build()
                 );
