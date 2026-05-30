@@ -10,9 +10,4 @@ public interface GroupMemberRepository
             Long userId,
             Long groupId
     );
-
-    boolean existsByUserIdAndGroupId(
-            Long userId,
-            Long groupId
-    );
 }

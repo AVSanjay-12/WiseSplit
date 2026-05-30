@@ -3,6 +3,7 @@ package com.sanjay.splitwise.service;
 import com.sanjay.splitwise.entity.Group;
 import com.sanjay.splitwise.entity.GroupMember;
 import com.sanjay.splitwise.entity.User;
+import com.sanjay.splitwise.exception.AlreadyExistsException;
 import com.sanjay.splitwise.exception.ResourceNotFoundException;
 import com.sanjay.splitwise.exception.UnauthorizedActionException;
 import com.sanjay.splitwise.repository.GroupMemberRepository;
@@ -60,12 +61,6 @@ public class GroupService {
 
         validateMemberBelongToGroup(email, groupId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new ResourceNotFoundException("Group not found"));
-
         boolean alreadyMember = groupMemberRepository
                 .existsByUser_IdAndGroup_Id(
                         userId,
@@ -74,10 +69,18 @@ public class GroupService {
 
         if (alreadyMember) {
 
-            throw new UnauthorizedActionException(
+            throw new AlreadyExistsException(
                     "User already belongs to group"
             );
         }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Group not found"));
+
+
 
         GroupMember groupMember = GroupMember.builder()
                 .user(user)

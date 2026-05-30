@@ -347,7 +347,7 @@ public class ExpenseService {
                 );
 
         boolean isMember = groupMemberRepository
-                .existsByUserIdAndGroupId(
+                .existsByUser_IdAndGroup_Id(
                         currentUser.getId(),
                         groupId
                 );
