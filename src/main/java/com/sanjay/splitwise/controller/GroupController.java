@@ -8,6 +8,7 @@ import com.sanjay.splitwise.mapper.GroupMapper;
 import com.sanjay.splitwise.mapper.GroupMemberMapper;
 import com.sanjay.splitwise.service.GroupService;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,19 +25,33 @@ public class GroupController {
     // POST /groups?name=Trip
     @PostMapping
     @Operation(summary = "Create a group")
-    public GroupResponseDTO createGroup(@RequestParam String name) {
-        Group group = groupService.createGroup(name);
+    public GroupResponseDTO createGroup(@RequestParam String name, Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Group group = groupService.createGroup(name, email);
+
         return GroupMapper.toDTO(group);
     }
 
     // Add user to group
     // POST /groups/{groupId}/users/{userId}
     @PostMapping("/{groupId}/users/{userId}")
-    @Operation(summary = "Add User to the Group")
-    public GroupMemberResponseDTO addUserToGroup(@PathVariable Long groupId,
-                                                 @PathVariable Long userId) {
+    public GroupMemberResponseDTO addUserToGroup(
+            @PathVariable Long groupId,
+            @PathVariable Long userId,
+            Authentication authentication
+    ) {
 
-        GroupMember groupMember = groupService.addUserToGroup(userId, groupId);
+        String email = authentication.getName();
+
+        GroupMember groupMember =
+                groupService.addUserToGroup(
+                        userId,
+                        groupId,
+                        email
+                );
+
         return GroupMemberMapper.toDTO(groupMember);
     }
 }
