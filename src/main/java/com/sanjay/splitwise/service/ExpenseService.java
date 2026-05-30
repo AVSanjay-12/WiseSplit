@@ -12,8 +12,10 @@ import com.sanjay.splitwise.exception.UnauthorizedActionException;
 import com.sanjay.splitwise.mapper.ExpenseMapper;
 import com.sanjay.splitwise.repository.*;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.*;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -38,7 +40,7 @@ public class ExpenseService {
     }
 
     @Transactional
-    public Expense addExpense(ExpenseRequestDTO request, String email){
+    public Expense addExpense(@Valid @RequestBody ExpenseRequestDTO request, String email){
 
 //        Fetch Payer
         User paidByUser = userRepository.findByEmail(email)
@@ -126,7 +128,7 @@ public class ExpenseService {
         return balances;
     }
 
-    private void processEqualSplits(ExpenseRequestDTO request){
+    private void processEqualSplits(@Valid @RequestBody ExpenseRequestDTO request){
 
         int totalUsers = request.getSplits().size();
 
@@ -155,7 +157,7 @@ public class ExpenseService {
         }
     }
 
-    private void processPercentageSplits(ExpenseRequestDTO request){
+    private void processPercentageSplits(@Valid @RequestBody ExpenseRequestDTO request){
 
         BigDecimal totalPercentage = BigDecimal.ZERO;
 
