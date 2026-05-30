@@ -1,6 +1,7 @@
 package com.sanjay.splitwise.service;
 
 import com.sanjay.splitwise.entity.User;
+import com.sanjay.splitwise.exception.AlreadyExistsException;
 import com.sanjay.splitwise.exception.ResourceNotFoundException;
 import com.sanjay.splitwise.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,10 @@ public class UserService {
     }
 
     public User createUser(String name, String email, String password) {
+        if(userRepository.findByEmail(email).isPresent()) {
+            throw new AlreadyExistsException("Email already exists");
+        }
+
         User user = User.builder()
                 .name(name)
                 .email(email)
@@ -30,13 +35,13 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User getUserById(Long id){
-        return userRepository.findById(id)
-                .orElseThrow(()->
-                        new ResourceNotFoundException("User not found with id: " + id));
-    }
+    public User getCurrentUser(String email) {
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "User not found"
+                        )
+                );
     }
 }

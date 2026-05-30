@@ -7,6 +7,7 @@ import com.sanjay.splitwise.mapper.UserMapper;
 import com.sanjay.splitwise.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,20 +33,14 @@ public class UserController {
         return UserMapper.toDTO(user);
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get user by ID")
-    public UserResponseDTO getUserById(@PathVariable Long id){
-        User user = userService.getUserById(id);
+    @GetMapping("/me")
+    public UserResponseDTO getCurrentUser(
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+
+        User user = userService.getCurrentUser(email);
 
         return UserMapper.toDTO(user);
-    }
-
-    @GetMapping
-    @Operation(summary = "Get all the users")
-    public List<UserResponseDTO> getAllUsers() {
-        return userService.getAllUsers()
-                .stream()
-                .map(UserMapper::toDTO)
-                .toList();
     }
 }
