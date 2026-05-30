@@ -258,6 +258,20 @@ public class ExpenseService {
     }
 
     public Expense settleUp(SettleUpRequestDTO request, String email) {
+
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "User not found"
+                        )
+                );
+
+        if (currentUser.getId().equals(request.getReceiverUserId())) {
+            throw new InvalidSplitException(
+                    "You cannot settle with yourself"
+            );
+        }
+
         SplitDTO splitDTO = SplitDTO.builder()
                 .userId(request.getReceiverUserId())
                 .shareAmount(request.getAmount())
