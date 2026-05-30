@@ -39,15 +39,19 @@ public class ExpenseController {
 
     @GetMapping("/groups/{groupId}/balances")
     @Operation(summary = "Get balances of the group")
-    public Map<Long, BigDecimal> calculateBalances(@PathVariable Long groupId){
-        return expenseService.calculateBalances(groupId);
+    public Map<Long, BigDecimal> calculateBalances(@PathVariable Long groupId, Authentication authentication){
+
+        String email = authentication.getName();
+        return expenseService.calculateBalances(groupId, email);
     }
 
     @GetMapping("/groups/{groupId}/settlements")
     @Operation(summary = "Get Settlement details")
-    public List<SettlementResponseDTO> calculateSettlements(@PathVariable Long groupId) {
+    public List<SettlementResponseDTO> calculateSettlements(@PathVariable Long groupId, Authentication authentication) {
 
-        return expenseService.calculateSettlements(groupId);
+        String email = authentication.getName();
+
+        return expenseService.calculateSettlements(groupId, email);
     }
 
     @PostMapping("/settle")
@@ -68,22 +72,25 @@ public class ExpenseController {
             @RequestParam(defaultValue = "0")
             int page,
             @RequestParam(defaultValue = "5")
-            int size
+            int size,
+            Authentication authentication
     ) {
-
-        return expenseService.getGroupExpenses(groupId, page, size);
+        String email = authentication.getName();
+        return expenseService.getGroupExpenses(groupId, page, size, email);
     }
 
-    @GetMapping("/users/{userId}")
+    @GetMapping("/users/my-expenses")
     @Operation(summary = "User expense history")
     public Page<ExpenseResponseDTO> getUserExpenses(
-            @PathVariable Long userId,
             @RequestParam(defaultValue = "0")
             int page,
             @RequestParam(defaultValue = "5")
-            int size
+            int size,
+            Authentication authentication
     ) {
 
-        return expenseService.getUserExpenses(userId, page, size);
+        String email = authentication.getName();
+
+        return expenseService.getUserExpenses(page, size, email);
     }
 }

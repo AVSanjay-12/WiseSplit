@@ -8,22 +8,16 @@ import com.sanjay.splitwise.entity.User;
 import com.sanjay.splitwise.enums.SplitType;
 import com.sanjay.splitwise.exception.InvalidSplitException;
 import com.sanjay.splitwise.exception.ResourceNotFoundException;
+import com.sanjay.splitwise.exception.UnauthorizedActionException;
 import com.sanjay.splitwise.mapper.ExpenseMapper;
-import com.sanjay.splitwise.repository.ExpenseRepository;
-import com.sanjay.splitwise.repository.ExpenseSplitRepository;
-import com.sanjay.splitwise.repository.GroupRepository;
-import com.sanjay.splitwise.repository.UserRepository;
+import com.sanjay.splitwise.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ExpenseService {
@@ -31,12 +25,16 @@ public class ExpenseService {
     private final ExpenseSplitRepository expenseSplitRepository;
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
+    private final GroupMemberRepository groupMemberRepository;
 
-    public ExpenseService(ExpenseRepository expenseRepository, ExpenseSplitRepository expenseSplitRepository, UserRepository userRepository, GroupRepository groupRepository){
+    public ExpenseService(ExpenseRepository expenseRepository, ExpenseSplitRepository expenseSplitRepository,
+                          UserRepository userRepository, GroupRepository groupRepository,
+                          GroupMemberRepository groupMemberRepository){
         this.expenseRepository = expenseRepository;
         this.expenseSplitRepository = expenseSplitRepository;
         this.userRepository = userRepository;
         this.groupRepository = groupRepository;
+        this.groupMemberRepository = groupMemberRepository;
     }
 
     @Transactional
@@ -48,6 +46,8 @@ public class ExpenseService {
 //        Fetch group
         Group group = groupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new ResourceNotFoundException("Group not found"));
+
+        validateGroupMembership(request, paidByUser.getId());
 
         if (request.getSplitType() == SplitType.EQUAL) {
             processEqualSplits(request);
@@ -95,7 +95,10 @@ public class ExpenseService {
     }
 
 //    Calculate Balance
-    public Map<Long, BigDecimal> calculateBalances(Long groupId){
+    public Map<Long, BigDecimal> calculateBalances(Long groupId, String email){
+
+        validateMemberBelongToGroup(email, groupId);
+
 //        userId -> balance
         Map<Long, BigDecimal> balances = new HashMap<>();
 //        Fetch all expenses in group
@@ -194,8 +197,8 @@ public class ExpenseService {
         }
     }
 
-    public List<SettlementResponseDTO> calculateSettlements(Long groupId){
-        Map<Long, BigDecimal> balances = calculateBalances(groupId);
+    public List<SettlementResponseDTO> calculateSettlements(Long groupId, String email){
+        Map<Long, BigDecimal> balances = calculateBalances(groupId, email);
 
         Map<Long, BigDecimal> creditors = new HashMap<>();
         Map<Long, BigDecimal> debtors = new HashMap<>();
@@ -269,7 +272,9 @@ public class ExpenseService {
         return addExpense(expenseRequest, email);
     }
 
-    public Page<ExpenseResponseDTO> getGroupExpenses(Long groupId, int page, int size) {
+    public Page<ExpenseResponseDTO> getGroupExpenses(Long groupId, int page, int size, String email) {
+
+        validateMemberBelongToGroup(email, groupId);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
@@ -278,12 +283,79 @@ public class ExpenseService {
                 .map(ExpenseMapper::toDTO);
     }
 
-    public Page<ExpenseResponseDTO> getUserExpenses(Long userId, int page, int size) {
+    public Page<ExpenseResponseDTO> getUserExpenses(int page, int size, String email) {
+
+        User authenticatedUser = userRepository
+                .findByEmail(email)
+                .orElseThrow(() ->
+                        new UnauthorizedActionException(
+                                "User not found"
+                        )
+                );
+        Long userId = authenticatedUser.getId();
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         return expenseRepository
                 .findByPaidById(userId, pageable)
                 .map(ExpenseMapper::toDTO);
+    }
+
+    private void validateSplitUsersBelongToGroup(ExpenseRequestDTO request) {
+
+        for (SplitDTO split : request.getSplits()) {
+
+            boolean isMember = groupMemberRepository.existsByUser_IdAndGroup_Id(
+                                    split.getUserId(),
+                                    request.getGroupId()
+                            );
+
+            if (!isMember) {
+                throw new UnauthorizedActionException(
+                        "All split users must belong to the group"
+                );
+            }
+        }
+    }
+
+    private void validatePayerBelongsToGroup(Long payerUserId, Long groupId) {
+
+        boolean isMember = groupMemberRepository.existsByUser_IdAndGroup_Id(payerUserId, groupId);
+
+        if (!isMember) {
+            throw new UnauthorizedActionException(
+                    "Payer must belong to the group"
+            );
+        }
+    }
+
+    private void validateGroupMembership(ExpenseRequestDTO request, Long payerId) {
+        validatePayerBelongsToGroup(
+                payerId,
+                request.getGroupId()
+        );
+
+        validateSplitUsersBelongToGroup(request);
+    }
+
+    private void validateMemberBelongToGroup(String email, Long groupId){
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "User not found"
+                        )
+                );
+
+        boolean isMember = groupMemberRepository
+                .existsByUserIdAndGroupId(
+                        currentUser.getId(),
+                        groupId
+                );
+
+        if (!isMember) {
+            throw new UnauthorizedActionException(
+                    "You are not a member of this group"
+            );
+        }
     }
 }
