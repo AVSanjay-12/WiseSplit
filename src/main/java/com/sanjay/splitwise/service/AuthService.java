@@ -3,6 +3,7 @@ package com.sanjay.splitwise.service;
 import com.sanjay.splitwise.dto.LoginRequestDTO;
 import com.sanjay.splitwise.dto.LoginResponseDTO;
 import com.sanjay.splitwise.entity.User;
+import com.sanjay.splitwise.exception.InvalidCredentialsException;
 import com.sanjay.splitwise.repository.UserRepository;
 import com.sanjay.splitwise.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,7 +31,7 @@ public class AuthService {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() ->
-                        new RuntimeException("Invalid email or password")
+                        new InvalidCredentialsException("Invalid email or password")
                 );
 
         boolean passwordMatches = passwordEncoder.matches(
@@ -38,7 +39,7 @@ public class AuthService {
                         user.getPassword()
                 );
 
-        if (!passwordMatches) {throw new RuntimeException(
+        if (!passwordMatches) {throw new InvalidCredentialsException(
                     "Invalid email or password"
             );
         }

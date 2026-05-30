@@ -6,6 +6,8 @@ import com.sanjay.splitwise.entity.ExpenseSplit;
 import com.sanjay.splitwise.entity.Group;
 import com.sanjay.splitwise.entity.User;
 import com.sanjay.splitwise.enums.SplitType;
+import com.sanjay.splitwise.exception.InvalidSplitException;
+import com.sanjay.splitwise.exception.ResourceNotFoundException;
 import com.sanjay.splitwise.mapper.ExpenseMapper;
 import com.sanjay.splitwise.repository.ExpenseRepository;
 import com.sanjay.splitwise.repository.ExpenseSplitRepository;
@@ -42,10 +44,10 @@ public class ExpenseService {
 
 //        Fetch Payer
         User paidByUser = userRepository.findByEmail(email)
-                        .orElseThrow(() -> new RuntimeException("User not found"));
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 //        Fetch group
         Group group = groupRepository.findById(request.getGroupId())
-                .orElseThrow(() -> new RuntimeException("Group not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Group not found"));
 
         if (request.getSplitType() == SplitType.EQUAL) {
             processEqualSplits(request);
@@ -62,7 +64,7 @@ public class ExpenseService {
             total = total.add(split.getShareAmount());
         }
         if(total.compareTo(request.getAmount()) != 0){
-            throw new RuntimeException("Split amounts do not match total expense");
+            throw new InvalidSplitException("Split amounts do not match total expense");
         }
 
 //        Create Expense
@@ -79,7 +81,7 @@ public class ExpenseService {
 //        Splits
         for(SplitDTO splitDTO: request.getSplits()){
             User user = userRepository.findById(splitDTO.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
             ExpenseSplit split = ExpenseSplit.builder()
                     .expense(savedExpense)
                     .user(user)
@@ -156,13 +158,13 @@ public class ExpenseService {
 
         for(SplitDTO split: request.getSplits()){
             if(split.getPercentage() == null){
-                throw new RuntimeException("Percentage is required for PERCENTAGE split");
+                throw new InvalidSplitException("Percentage is required for PERCENTAGE split");
             }
             totalPercentage =  totalPercentage.add(split.getPercentage());
         }
 
         if(totalPercentage.compareTo(BigDecimal.valueOf(100.00)) != 0){
-            throw new RuntimeException("Total percentage must equal 100");
+            throw new InvalidSplitException("Total percentage must equal 100");
         }
 
         BigDecimal totalAmount = request.getAmount();
