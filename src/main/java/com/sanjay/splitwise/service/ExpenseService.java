@@ -16,6 +16,8 @@ import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.*;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -23,6 +25,9 @@ import java.util.*;
 
 @Service
 public class ExpenseService {
+
+    private static final Logger log = LoggerFactory.getLogger(ExpenseService.class);
+
     private final ExpenseRepository expenseRepository;
     private final ExpenseSplitRepository expenseSplitRepository;
     private final UserRepository userRepository;
@@ -92,6 +97,13 @@ public class ExpenseService {
 
             expenseSplitRepository.save(split);
         }
+
+        log.info(
+                "Expense created in group {} by user {} amount {}",
+                request.getGroupId(),
+                paidByUser.getEmail(),
+                request.getAmount()
+        );
 
         return savedExpense;
     }
@@ -173,7 +185,6 @@ public class ExpenseService {
         }
 
         BigDecimal totalAmount = request.getAmount();
-
         BigDecimal distributedAmount = BigDecimal.ZERO;
 
         int totalUsers = request.getSplits().size();
@@ -184,7 +195,6 @@ public class ExpenseService {
 
             if(i == totalUsers - 1) {
                 BigDecimal remainingAmount = totalAmount.subtract(distributedAmount);
-
                 split.setShareAmount(remainingAmount);
             }
             else{
@@ -285,6 +295,13 @@ public class ExpenseService {
                         .splits(List.of(splitDTO))
                         .build();
 
+        log.info(
+                "Settlement created from {} to {} amount {}",
+                email,
+                request.getReceiverUserId(),
+                request.getAmount()
+        );
+
         return addExpense(expenseRequest, email);
     }
 
@@ -339,6 +356,13 @@ public class ExpenseService {
         boolean isMember = groupMemberRepository.existsByUser_IdAndGroup_Id(payerUserId, groupId);
 
         if (!isMember) {
+
+            log.warn(
+                    "Unauthorized group payment attempt by user {} for group {}",
+                    payerUserId,
+                    groupId
+            );
+
             throw new UnauthorizedActionException(
                     "Payer must belong to the group"
             );
@@ -369,6 +393,13 @@ public class ExpenseService {
                 );
 
         if (!isMember) {
+
+            log.warn(
+                    "Unauthorized group access attempt by user {} for group {}",
+                    email,
+                    groupId
+            );
+
             throw new UnauthorizedActionException(
                     "You are not a member of this group"
             );

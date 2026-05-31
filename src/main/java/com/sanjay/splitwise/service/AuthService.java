@@ -8,9 +8,13 @@ import com.sanjay.splitwise.repository.UserRepository;
 import com.sanjay.splitwise.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
 
@@ -30,21 +34,41 @@ public class AuthService {
     public LoginResponseDTO login(LoginRequestDTO request) {
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() ->
-                        new InvalidCredentialsException("Invalid email or password")
-                );
+                .orElseThrow(() -> {
+
+                    log.warn(
+                            "Failed login attempt for email: {}",
+                            request.getEmail()
+                    );
+
+                    return new InvalidCredentialsException(
+                            "Invalid email or password"
+                    );
+                });
 
         boolean passwordMatches = passwordEncoder.matches(
                         request.getPassword(),
                         user.getPassword()
                 );
 
-        if (!passwordMatches) {throw new InvalidCredentialsException(
+        if (!passwordMatches) {
+
+            log.warn(
+                    "Failed login attempt for email: {}",
+                    request.getEmail()
+            );
+
+            throw new InvalidCredentialsException(
                     "Invalid email or password"
             );
         }
 
         String token = jwtUtil.generateToken(user.getEmail());
+
+        log.info(
+                "User logged in successfully: {}",
+                user.getEmail()
+        );
 
         return LoginResponseDTO.builder()
                 .token(token)
