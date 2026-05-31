@@ -1,10 +1,7 @@
 package com.sanjay.splitwise.service;
 
 import com.sanjay.splitwise.dto.*;
-import com.sanjay.splitwise.entity.Expense;
-import com.sanjay.splitwise.entity.ExpenseSplit;
-import com.sanjay.splitwise.entity.Group;
-import com.sanjay.splitwise.entity.User;
+import com.sanjay.splitwise.entity.*;
 import com.sanjay.splitwise.enums.SplitType;
 import com.sanjay.splitwise.exception.InvalidSplitException;
 import com.sanjay.splitwise.exception.ResourceNotFoundException;
@@ -13,11 +10,13 @@ import com.sanjay.splitwise.mapper.ExpenseMapper;
 import com.sanjay.splitwise.repository.*;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.*;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -45,6 +44,10 @@ public class ExpenseService {
     }
 
     @Transactional
+    @CacheEvict(
+            value = "groupBalances",
+            key = "#request.groupId"
+    )
     public Expense addExpense(@Valid @RequestBody ExpenseRequestDTO request, String email){
 
 //        Fetch Payer
@@ -53,6 +56,17 @@ public class ExpenseService {
 //        Fetch group
         Group group = groupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new ResourceNotFoundException("Group not found"));
+
+        if (request.getSplitType() == SplitType.EQUAL) {
+            generateEqualSplits(request);
+        }
+
+        if (request.getSplitType() != SplitType.EQUAL
+                && (request.getSplits() == null
+                || request.getSplits().isEmpty())) {
+
+            throw new InvalidSplitException("Splits are required");
+        }
 
         validateGroupMembership(request, paidByUser.getId());
 
@@ -109,6 +123,10 @@ public class ExpenseService {
     }
 
 //    Calculate Balance
+    @Cacheable(
+            value = "groupBalances",
+            key = "#groupId"
+    )
     public Map<Long, BigDecimal> calculateBalances(Long groupId, String email){
 
         validateMemberBelongToGroup(email, groupId);
@@ -137,6 +155,12 @@ public class ExpenseService {
                                 .subtract(split.getShareAmount()));
             }
         }
+
+        log.info(
+                "Calculating balances for group {} from DB",
+                groupId
+        );
+
         return balances;
     }
 
@@ -267,6 +291,10 @@ public class ExpenseService {
         return settlements;
     }
 
+    @CacheEvict(
+            value = "groupBalances",
+            key = "#request.groupId"
+    )
     public Expense settleUp(SettleUpRequestDTO request, String email) {
 
         User currentUser = userRepository.findByEmail(email)
@@ -404,5 +432,22 @@ public class ExpenseService {
                     "You are not a member of this group"
             );
         }
+    }
+
+    private void generateEqualSplits(ExpenseRequestDTO request) {
+
+        List<GroupMember> members = groupMemberRepository.findByGroupId(request.getGroupId());
+
+        List<SplitDTO> splits = new ArrayList<>();
+
+        for (GroupMember member : members) {
+
+            SplitDTO split = new SplitDTO();
+            split.setUserId(member.getUser().getId());
+
+            splits.add(split);
+        }
+
+        request.setSplits(splits);
     }
 }

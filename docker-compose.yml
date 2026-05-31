@@ -9,3 +9,8 @@ services:
       POSTGRES_PASSWORD: splitwise_pass
     ports:
       - "5432:5432"
+  redis:
+    image: redis:7
+    container_name: splitwise-redis
+    ports:
+      - "6379:6379"
