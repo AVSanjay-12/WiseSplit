@@ -6,6 +6,7 @@ import com.sanjay.splitwise.entity.User;
 import com.sanjay.splitwise.mapper.UserMapper;
 import com.sanjay.splitwise.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
+@Tag(
+        name = "Users",
+        description = "User management APIs"
+)
 public class UserController {
 
     private final UserService userService;
@@ -34,6 +39,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
+    @Operation(summary = "View current user info")
     public UserResponseDTO getCurrentUser(
             Authentication authentication
     ) {

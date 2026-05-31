@@ -8,11 +8,16 @@ import com.sanjay.splitwise.mapper.GroupMapper;
 import com.sanjay.splitwise.mapper.GroupMemberMapper;
 import com.sanjay.splitwise.service.GroupService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/groups")
+@Tag(
+        name = "Groups",
+        description = "Group management APIs"
+)
 public class GroupController {
 
     private final GroupService groupService;
@@ -37,6 +42,7 @@ public class GroupController {
     // Add user to group
     // POST /groups/{groupId}/users/{userId}
     @PostMapping("/{groupId}/users/{userId}")
+    @Operation(summary = "Add user to the group")
     public GroupMemberResponseDTO addUserToGroup(
             @PathVariable Long groupId,
             @PathVariable Long userId,

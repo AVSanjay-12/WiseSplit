@@ -8,6 +8,7 @@ import com.sanjay.splitwise.entity.Expense;
 import com.sanjay.splitwise.mapper.ExpenseMapper;
 import com.sanjay.splitwise.service.ExpenseService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
@@ -19,6 +20,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/expenses")
+@Tag(
+        name = "Expense",
+        description = "Expense management APIs"
+)
 public class ExpenseController {
 
     private final ExpenseService expenseService;
