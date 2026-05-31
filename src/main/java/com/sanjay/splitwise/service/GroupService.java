@@ -1,11 +1,13 @@
 package com.sanjay.splitwise.service;
 
+import com.sanjay.splitwise.dto.GroupIndividualMemberResponseDTO;
 import com.sanjay.splitwise.entity.Group;
 import com.sanjay.splitwise.entity.GroupMember;
 import com.sanjay.splitwise.entity.User;
 import com.sanjay.splitwise.exception.AlreadyExistsException;
 import com.sanjay.splitwise.exception.ResourceNotFoundException;
 import com.sanjay.splitwise.exception.UnauthorizedActionException;
+import com.sanjay.splitwise.mapper.GroupIndividualMemberMapper;
 import com.sanjay.splitwise.repository.GroupMemberRepository;
 import com.sanjay.splitwise.repository.GroupRepository;
 import com.sanjay.splitwise.repository.UserRepository;
@@ -14,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class GroupService {
@@ -163,5 +166,32 @@ public class GroupService {
 
     private void logUserNotFound(String email){
         log.warn("User with email {} not found", email);
+    }
+
+    public List<GroupIndividualMemberResponseDTO> getGroupIndividualMembers(Long groupId, String email){
+        User currentUser = userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "User not found"
+                                )
+                        );
+        boolean isMember = groupMemberRepository
+                .existsByUser_IdAndGroup_Id(
+                        currentUser.getId(),
+                        groupId
+                );
+
+        if (!isMember) {
+            log.warn("Unauthorized user {}", email);
+            throw new UnauthorizedActionException(
+                    "You are not a member of this group"
+            );
+        }
+
+        List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
+
+        return members.stream()
+                .map(GroupIndividualMemberMapper::toDTO)
+                .toList();
     }
 }

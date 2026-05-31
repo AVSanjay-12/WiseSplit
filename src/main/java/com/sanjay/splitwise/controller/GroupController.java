@@ -1,5 +1,6 @@
 package com.sanjay.splitwise.controller;
 
+import com.sanjay.splitwise.dto.GroupIndividualMemberResponseDTO;
 import com.sanjay.splitwise.dto.GroupMemberResponseDTO;
 import com.sanjay.splitwise.dto.GroupResponseDTO;
 import com.sanjay.splitwise.entity.Group;
@@ -11,6 +12,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/groups")
@@ -59,5 +62,18 @@ public class GroupController {
                 );
 
         return GroupMemberMapper.toDTO(groupMember);
+    }
+
+    @GetMapping("/{groupId}/members")
+    public List<GroupIndividualMemberResponseDTO> getGroupMembers(
+            @PathVariable Long groupId,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        return groupService.getGroupIndividualMembers(
+                groupId,
+                email
+        );
     }
 }
