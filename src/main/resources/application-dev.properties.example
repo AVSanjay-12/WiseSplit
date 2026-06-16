@@ -1,8 +1,8 @@
 server.port=9090
 
 spring.datasource.url=jdbc:postgresql://localhost:5432/splitwise
-spring.datasource.username=splitwise_user
-spring.datasource.password=splitwise_pass
+spring.datasource.username=YOUR_DB_USERNAME
+spring.datasource.password=YOUR_DB_PASSWORD
 
 spring.flyway.enabled=true
 spring.flyway.locations=classpath:db/migration
@@ -10,7 +10,7 @@ spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 
-jwt.secret=mysupersecuresecretkeymysupersecuresecretkey
+jwt.secret=YOUR_JWT_SECRET
 
 spring.data.redis.host=localhost
 spring.data.redis.port=6379
